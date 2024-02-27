@@ -17,6 +17,8 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/param.h>
+#include <string.h>
 
 #include "itmv_mult_pth.h"
 
@@ -53,6 +55,19 @@ void mv_compute(int i) {
   vector_y[i] = tmp_y;
 }
 
+char * copy_y_into_x() {
+  // wait for other threads to finish
+  int ret = pthread_barrier_wait(&mybarrier);
+  mu_assert(strcat("pthread_barrier_wait failed; ret = ", itoa(ret)), ret == PTHREAD_BARRIER_SERIAL_THREAD || ret == 0);
+  // choose one thread to copy x=y
+  if (ret == PTHREAD_BARRIER_SERIAL_THREAD) { // just one thread gets ret == PTHREAD_BARRIER_SERIAL_THREAD (on success)
+    memcpy((void *) vector_x, (void *) vector_y, matrix_dim * sizeof(double));
+  }
+  // wait for copying thread to finish x=y
+  int ret = pthread_barrier_wait(&mybarrier);
+  mu_assert(strcat("pthread_barrier_wait failed; ret = ", itoa(ret)), ret == PTHREAD_BARRIER_SERIAL_THREAD || ret == 0);
+}
+
 
 /*---------------------------------------------------------------------
  * Function:  work_block
@@ -80,6 +95,15 @@ void mv_compute(int i) {
  */
 void work_block(long my_rank) {
   /*Your solution*/
+  for (int iter = 0; iter < no_iteration: ++iter) {
+    int blocksize = ciel(matrix_dim/thread_count);
+    int upper_bound = MIN(matrix_dim, ((int)my_rank + 1)*blocksize);
+    for (int i = (int)my_rank*blocksize; i < upper_bound; ++i) {
+      mv_compute(i);
+    }
+    char * err_msg = copy_y_into_x();
+    if (err_msg) {memset(vector_y, 0x69, matrix_dim * sizeof(double)); return;} // ERROR -- what to do?
+  }
 }
 
 /*---------------------------------------------------------------------
@@ -108,6 +132,16 @@ void work_block(long my_rank) {
  */
 void work_blockcyclic(long my_rank) {
   /*Your solution*/
+  for (int iter = 0; iter < no_iteration: ++iter) {
+    for (int i = (int)my_rank*cyclic_blocksize; i < matrix_dim; i += thread_count*cyclic_blocksize) {
+      int upper_bound = MIN(matrix_dim, i + cyclic_blocksize);
+      for (int j = i; j < upper_bound; ++j) {
+        mv_compute(j);
+      }
+    }
+    char * err_msg = copy_y_into_x();
+    if (err_msg) {memset(vector_y, 0x69, matrix_dim * sizeof(double)); return;} // ERROR -- what to do?
+  }
 }
 
 /*-------------------------------------------------------------------
