@@ -19,8 +19,11 @@
  */
 
 int cs140barrier_init(cs140barrier *bstate, int total_nthread) {
-  /*Your solution*/
-
+  bstate->total_nthread = total_nthread;
+  bstate->arrive_nthread = 0;
+  bstate->odd_round = False;
+  pthread_mutex_init(&(bstate->barrier_mutex), NULL);
+  pthread_cond_init(&(bstate->barrier_cond), NULL);
   return 0;
 }
 
@@ -43,8 +46,17 @@ int cs140barrier_init(cs140barrier *bstate, int total_nthread) {
  */
 
 int cs140barrier_wait(cs140barrier *bstate) {
-  /*Your solution*/
-
+  pthread_mutex_lock(&(bstate->barrier_mutex));
+  bstate->arrive_nthread++;
+  if (bstate->arrive_nthread == bstate->total_nthread) {
+    bstate->arrive_nthread = 0;
+    pthread_cond_broadcast(&(bstate->barrier_cond));
+  } else {
+    while(bstate->arrive_nthread != bstate->total_nthread) {
+      pthread_cond_wait(&(bstate->barrier_cond), &(bstate->barrier_mutex));
+    }
+  }
+  pthread_mutex_unlock(&(bstate->barrier_mutex));
   return 0;
 }
 
@@ -58,7 +70,7 @@ int cs140barrier_wait(cs140barrier *bstate) {
  */
 
 int cs140barrier_destroy(cs140barrier *bstate) {
-  /*Your solution*/
-
+  pthread_cond_destroy(&(bstate->barrier_cond));
+  pthread_mutex_destroy(&(bstate->barrier_mutex));
   return 0;
 }
