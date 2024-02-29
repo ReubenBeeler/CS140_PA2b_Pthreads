@@ -1,0 +1,26 @@
+$ # 1 THREADS/CORES
+$ uptime; ./itmv_mult_test_pth 1; uptime
+ 00:30:14 up 13:30,  0 users,  load average: 0.42, 0.25, 0.26
+Test 12: n=4K t=1K upper block mapping: Wall clock time = 0.094567 with 1 threads
+Test 13: n=4K t=1K upper block cylic (r=1): Wall clock time = 0.094633 with 1 threads
+Test 14: n=4K t=1K upper block cyclic(r=16): Wall clock time = 0.097900 with 1 threads
+Summary: Failed 0 out of 3 tests
+ 00:30:15 up 13:30,  0 users,  load average: 0.42, 0.25, 0.26
+
+$ # 2 THREADS/CORES
+$ uptime; ./itmv_mult_test_pth 2; uptime
+ 00:27:31 up 13:27,  0 users,  load average: 0.37, 0.18, 0.25
+Test 12: n=4K t=1K upper block mapping: Wall clock time = 0.078684 with 2 threads
+Test 13: n=4K t=1K upper block cylic (r=1): Wall clock time = 0.049777 with 2 threads
+Test 14: n=4K t=1K upper block cyclic(r=16): Wall clock time = 0.052505 with 2 threads
+Summary: Failed 0 out of 3 tests
+ 00:27:31 up 13:27,  0 users,  load average: 0.37, 0.18, 0.25
+
+$ # 4 THREADS/CORES
+$ uptime; ./itmv_mult_test_pth 4; uptime
+ 00:27:34 up 13:27,  0 users,  load average: 0.34, 0.18, 0.25
+Test 12: n=4K t=1K upper block mapping: Wall clock time = 0.042851 with 4 threads
+Test 13: n=4K t=1K upper block cylic (r=1): Wall clock time = 0.032063 with 4 threads
+Test 14: n=4K t=1K upper block cyclic(r=16): Wall clock time = 0.026402 with 4 threads
+Summary: Failed 0 out of 3 tests
+ 00:27:35 up 13:27,  0 users,  load average: 0.34, 0.18, 0.25
