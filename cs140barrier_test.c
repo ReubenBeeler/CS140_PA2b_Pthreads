@@ -161,9 +161,9 @@ char *barrier_multi_thread_test2() { return barrier_thread_test(16); }
  */
 void run_all_tests(void) {
   /* Call all tests.  You can add more tests*/
-  mu_run_test(barrier_init_test);
-  mu_run_test(barrier_one_thread_test);
-  mu_run_test(barrier_multi_thread_test);
+  printf(mu_run_test(barrier_init_test));
+  printf(mu_run_test(barrier_one_thread_test));
+  printf(mu_run_test(barrier_multi_thread_test));
   mu_run_test(barrier_multi_thread_test1);
   mu_run_test(barrier_multi_thread_test2);
 }

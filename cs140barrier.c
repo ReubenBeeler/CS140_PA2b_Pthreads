@@ -45,19 +45,29 @@ int cs140barrier_init(cs140barrier *bstate, int total_nthread) {
  *            The last thread should change the flag and other fields.
  */
 
+int local_sense = 0;
+
 int cs140barrier_wait(cs140barrier *bstate) {
   pthread_mutex_lock(&(bstate->barrier_mutex));
   bstate->arrive_nthread++;
   if (bstate->arrive_nthread == bstate->total_nthread) {
     bstate->arrive_nthread = 0;
+    if (bstate->odd_round == True) {
+      bstate->odd_round = False;
+    } else {
+      bstate->odd_round = True;
+    }
     pthread_cond_broadcast(&(bstate->barrier_cond));
+    pthread_mutex_unlock(&(bstate->barrier_mutex));
+    return 1;
   } else {
-    while(bstate->arrive_nthread != bstate->total_nthread) {
+    boolean round = bstate->odd_round;
+    while(round == bstate->odd_round) {
       pthread_cond_wait(&(bstate->barrier_cond), &(bstate->barrier_mutex));
     }
+    pthread_mutex_unlock(&(bstate->barrier_mutex));
+    return 0;
   }
-  pthread_mutex_unlock(&(bstate->barrier_mutex));
-  return 0;
 }
 
 /******************************************************
