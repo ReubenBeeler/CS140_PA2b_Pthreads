@@ -137,6 +137,10 @@ Block-Cyclic in general performs better than Block. That is because the cylic di
 of upper triangular matrices, which is that different rows have different runtime complexities (due to different number of nontrivial 
 columns in matrix mult) hence performing much better on them.
 
+Note that the upper triangular matrix test cases run much quicker than the other test cases because of the error thresholding.
+These matrices tended to converge an order of magnitude quicker, but when you disable the error thresholding, they run in about
+the same time.
+
 
 Please indicate if your evaluation is done on CSIL and if yes, list the uptime index of that CSIL machine.  
 - We used CSIL! The uptime was about 0.25 when testing. More uptime information before and after test cases can be seen in file `output.txt`.
