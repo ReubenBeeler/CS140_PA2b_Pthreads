@@ -25,6 +25,7 @@
 
 
 pthread_barrier_t mybarrier; /*It will be initailized at itmv_mult_test_pth.c*/
+int stop = 0; // set to 1 by thread 0 if error is low enough to quit
 
 
 /*---------------------------------------------------------------------
@@ -84,6 +85,8 @@ char * sync_on_barrier() {
  *            int matrix_dim:  the global  number of columns
  *                             (same as the number of rows)
  *            int no_iteration:   the number of iterations
+ *            int stop:         WE ADDED THIS!!! stop=1 if error is low enough
+ *                              to exit (set by thread 0) and stop=0 otherwise
  * Global in/out vars:
  *            double vector_x[]:  vector x
  * Global out vars:
@@ -92,6 +95,7 @@ char * sync_on_barrier() {
 void work_block(long my_rank) {
   /*Your solution*/
   // printf("w_b: %ld\nno_iterations: %i\n", my_rank, no_iterations); // DEBUG
+  if (my_rank == 0) stop = 0;
   char * err_msg;
   for (int iter = 0; iter < no_iterations; ++iter) {
     int blocksize = matrix_dim/thread_count + (matrix_dim % thread_count == 0 ? 0 : 1);
@@ -101,21 +105,23 @@ void work_block(long my_rank) {
     }
     err_msg = sync_on_barrier(); if (err_msg) {puts(err_msg); memset(vector_y, 0x69, matrix_dim * sizeof(double)); return;} // ERROR -- what to do?
     
-    // check if error is below threshold
-    int i;
-    for (i = 0; i < matrix_dim; ++i) {
-      if (fabs(vector_x[i] - vector_y[i]) > ERROR_THRESHOLD) {
-        break;
+    if (my_rank == 0) {
+      // check if error is below threshold
+      int i;
+      for (i = 0; i < matrix_dim; ++i) {
+        if (fabs(vector_x[i] - vector_y[i]) > ERROR_THRESHOLD) {
+          break;
+        }
       }
+      if (i == matrix_dim) stop = 1; // sufficiently low error
+
+      // choose one thread to copy x=y
+      memcpy((void *) vector_x, (void *) vector_y, matrix_dim * sizeof(double));
     }
-    if (i == matrix_dim) return; // sufficiently low error
-
+    
     err_msg = sync_on_barrier(); if (err_msg) {puts(err_msg); memset(vector_y, 0x69, matrix_dim * sizeof(double)); return;} // ERROR -- what to do?
 
-    // choose one thread to copy x=y
-    if (my_rank == 0) memcpy((void *) vector_x, (void *) vector_y, matrix_dim * sizeof(double));
-
-    err_msg = sync_on_barrier(); if (err_msg) {puts(err_msg); memset(vector_y, 0x69, matrix_dim * sizeof(double)); return;} // ERROR -- what to do?
+    if (stop) break;
   }
 }
 
@@ -146,6 +152,7 @@ void work_block(long my_rank) {
 void work_blockcyclic(long my_rank) {
   /*Your solution*/
   // printf("w_bc: %ld\nno_iterations: %i\n", my_rank, no_iterations); // DEBUG
+  if (my_rank == 0) stop = 0;
   char * err_msg;
   for (int iter = 0; iter < no_iterations; ++iter) {
     for (int i = (int)my_rank*cyclic_blocksize; i < matrix_dim; i += thread_count*cyclic_blocksize) {
@@ -154,24 +161,25 @@ void work_blockcyclic(long my_rank) {
         mv_compute(j);
       }
     }
-
     err_msg = sync_on_barrier(); if (err_msg) {puts(err_msg); memset(vector_y, 0x69, matrix_dim * sizeof(double)); return;} // ERROR -- what to do?
-
-    // check if error is below threshold
-    int i;
-    for (i = 0; i < matrix_dim; ++i) {
-      if (fabs(vector_x[i] - vector_y[i]) > ERROR_THRESHOLD) {
-        break;
+    
+    if (my_rank == 0) {
+      // check if error is below threshold
+      int i;
+      for (i = 0; i < matrix_dim; ++i) {
+        if (fabs(vector_x[i] - vector_y[i]) > ERROR_THRESHOLD) {
+          break;
+        }
       }
+      if (i == matrix_dim) stop = 1; // sufficiently low error
+
+      // choose one thread to copy x=y
+      memcpy((void *) vector_x, (void *) vector_y, matrix_dim * sizeof(double));
     }
-    if (i == matrix_dim) return; // sufficiently low error
-
+    
     err_msg = sync_on_barrier(); if (err_msg) {puts(err_msg); memset(vector_y, 0x69, matrix_dim * sizeof(double)); return;} // ERROR -- what to do?
 
-    // choose one thread to copy x=y
-    if (my_rank == 0) memcpy((void *) vector_x, (void *) vector_y, matrix_dim * sizeof(double));
-
-    err_msg = sync_on_barrier(); if (err_msg) {puts(err_msg); memset(vector_y, 0x69, matrix_dim * sizeof(double)); return;} // ERROR -- what to do?
+    if (stop) break;
   }
 }
 
